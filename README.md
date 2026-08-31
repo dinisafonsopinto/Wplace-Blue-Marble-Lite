@@ -2,7 +2,9 @@
 
 Small pop-up displays timer and time until full pixels and pixel count for the next level. When inspecting a pixel, there's a button to inspect its location at the archive [Wplace Daily Archives](https://wplace.eralyon.net/en/).
 
-[images here]
+<img width="423" height="222" alt="image" src="https://github.com/user-attachments/assets/30e8c8bb-cb78-4a5c-8df1-6e3da9b5eee3" />
+<img width="626" height="368" alt="image" src="https://github.com/user-attachments/assets/916f2bf4-1e6e-4ddc-8189-36f3d6c3d7e4" />
+
 
 ## Installation
 
