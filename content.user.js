@@ -204,15 +204,15 @@
         const btnRect = targetElement.getBoundingClientRect();
         const tooltipRect = tooltip.getBoundingClientRect();
 
-        // 3. Calculate position (Centered X, hovering 10px above the button on Y)
+        // 3. Calculate position (Centered X, hovering 6px above the button on Y)
         let targetX = btnRect.left + (btnRect.width / 2) - (tooltipRect.width / 2);
-        let targetY = btnRect.top - tooltipRect.height - 10; 
+        let targetY = btnRect.top - tooltipRect.height - 6; 
 
         // 4. Edge collision: Prevent the tooltip from bleeding off the screen
         targetX = Math.max(10, Math.min(targetX, window.innerWidth - tooltipRect.width - 10));
 
         // 5. Apply the translation
-        tooltip.firstElementChild.style = `translate: ${Math.round(targetX)}px, ${Math.round(targetY)}px`;
+        tooltip.style.translate = `${Math.round(targetX)}px ${Math.round(targetY)}px`;
     }
 
     function hideInGameTooltip() {
