@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Blue Marble (Lite)
 // @namespace    https://github.com/SwingTheVine/
-// @version      1.1.1
+// @version      1.1.2
 // @description  A stripped-down userscript for Wplace.live showing pixel timer, next level, and adding an archive button.
 // @author       Dinis12481
 // @match        https://wplace.live/*
@@ -98,7 +98,7 @@
     function createArchiveButton(id, originalShareBtn) {
         const btn = document.createElement('button');
         btn.id = id;
-        btn.className = 'btn btn-sm btn-primary btn-soft';
+        btn.className = originalShareBtn.className; // copy the style so it automatically follows new CSS
         btn.setAttribute('aria-label', 'Open in Archive');
         btn.title = 'Open in Archive';
         
@@ -148,7 +148,7 @@
                             if (styleEl) styleEl.remove(); 
                             
                             if (lat && lng) {
-                                window.open(`https://wplace.eralyon.net/en/?lat=${lat}&lng=${lng}&zoom=${zoom}&version=14545`, '_blank');
+                                window.open(`https://wplace.eralyon.net/en/?lat=${lat}&lng=${lng}&zoom=${zoom}`, '_blank');
                             } else {
                                 alert("Could not extract parameters from the share URL.");
                             }
@@ -166,10 +166,10 @@
     }
 
     function injectArchiveButton() {
-        const popup = document.querySelector('.absolute.bottom-0.left-0.z-30');
-        if (!popup) return;
-
-        const shareButtons = popup.querySelectorAll('button[aria-label="Share"]');
+        // Search directly for the share button anywhere on the UI, case-insensitive
+        const shareButtons = document.querySelectorAll('button[aria-label="share" i], button[title="share" i]');
+        if (shareButtons.length === 0) return;
+    
         shareButtons.forEach((shareBtn, index) => {
             const btnId = 'eralyon-archive-btn-' + index;
             
@@ -177,7 +177,8 @@
                 const archiveBtn = createArchiveButton(btnId, shareBtn);
                 const parent = shareBtn.parentElement;
                 
-                if (parent && parent.className.includes('grid-cols-[1fr_auto_auto]')) {
+                if (parent) {
+                    // Force room for the 4th button regardless of the specific Tailwind class used
                     parent.classList.remove('grid-cols-[1fr_auto_auto]');
                     parent.style.gridTemplateColumns = '1fr auto auto auto';
                 }
@@ -219,8 +220,28 @@
             updateStats(cachedData);
         }
 
-        const observer = new MutationObserver(() => injectArchiveButton());
-        observer.observe(document.body, { childList: true, subtree: true });
+        // 1. Try to find the specific UI wrapper. 
+        // If you inspect the page and find a specific div that houses the UI (like '<div id="app">'), put it here.
+        // Otherwise, it safely falls back to observing the body.
+        const targetContainer = document.querySelector('#app') || document.body;
+
+        const observer = new MutationObserver((mutations) => {
+            // 2. Filter the noise. Check if the mutation actually added a new HTML element.
+            // This ignores text node updates (like your timer ticking down).
+            const hasNewElements = mutations.some(mutation => 
+                Array.from(mutation.addedNodes).some(node => node.nodeType === Node.ELEMENT_NODE)
+            );
+
+            if (hasNewElements) {
+                injectArchiveButton();
+            }
+        });
+
+        // 3. Configure the observer to ONLY watch for added/removed children, not attributes or text data.
+        observer.observe(targetContainer, { 
+            childList: true, 
+            subtree: true 
+        });
     }
 
     // Only inject UI once the body actually exists
