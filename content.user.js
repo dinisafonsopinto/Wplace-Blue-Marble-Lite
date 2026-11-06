@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Blue Marble (Lite)
 // @namespace    https://github.com/SwingTheVine/
-// @version      1.1.2
+// @version      1.1.3
 // @description  A stripped-down userscript for Wplace.live showing pixel timer, next level, and adding an archive button.
 // @author       Dinis12481
 // @match        https://wplace.live/*
@@ -100,13 +100,17 @@
         btn.id = id;
         btn.className = originalShareBtn.className; // copy the style so it automatically follows new CSS
         btn.setAttribute('aria-label', 'Open in Archive');
-        btn.title = 'Open in Archive';
+
+        btn.onfocus = (e) => displayInGameTooltip(e.currentTarget, 'Open in Archive');
+        btn.onmouseenter = (e) => displayInGameTooltip(e.currentTarget, 'Open in Archive');
+        btn.onmouseleave = () => hideInGameTooltip();
         
         btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`;
         
         btn.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
+            hideInGameTooltip();
             
             const styleId = 'eralyon-hide-dialog';
             if (!document.getElementById(styleId)) {
@@ -185,6 +189,39 @@
                 shareBtn.insertAdjacentElement('afterend', archiveBtn);
             }
         });
+    }
+
+    function displayInGameTooltip(targetElement, message) {
+        const tooltip = document.getElementById('game-tooltip');
+        if (!tooltip) return;
+
+        // 1. Inject text and reveal the tooltip FIRST so the browser gives it dimensions
+        tooltip.firstElementChild.textContent = message;
+        tooltip.removeAttribute('hidden');
+        tooltip.setAttribute('data-open', '');
+
+        // 2. Measure both the button and the newly populated tooltip
+        const btnRect = targetElement.getBoundingClientRect();
+        const tooltipRect = tooltip.getBoundingClientRect();
+
+        // 3. Calculate position (Centered X, hovering 10px above the button on Y)
+        let targetX = btnRect.left + (btnRect.width / 2) - (tooltipRect.width / 2);
+        let targetY = btnRect.top - tooltipRect.height - 10; 
+
+        // 4. Edge collision: Prevent the tooltip from bleeding off the screen
+        targetX = Math.max(10, Math.min(targetX, window.innerWidth - tooltipRect.width - 10));
+
+        // 5. Apply the translation
+        tooltip.firstElementChild.style = `translate: ${Math.round(targetX)}px, ${Math.round(targetY)}px`;
+    }
+
+    function hideInGameTooltip() {
+        const tooltip = document.getElementById('game-tooltip');
+        if (!tooltip) return;
+        
+        tooltip.setAttribute('hidden', '');
+        tooltip.removeAttribute('data-open');
+        tooltip.firstElementChild.textContent = '';
     }
 
     // 4. Initialize UI safely after DOM loads
